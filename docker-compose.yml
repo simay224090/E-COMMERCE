@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # 1. Ortak PostgreSQL Veritabanı
+  dvu-postgres:
+    image: postgres:16-alpine
+    container_name: dvu_postgres_db
+    environment:
+      POSTGRES_USER: dvu_user
+      POSTGRES_PASSWORD: dvu_password
+      POSTGRES_DB: dvu_ecommerce
+    ports:
+      - "5432:5432" # Bilgisayarından (Postman/DBeaver) erişebilmen için
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dvu-network
+
+  # 2. Loglama için Merkezi Elasticsearch
+  dvu-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: dvu_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Test ortamında hız kazanmak için şifrelemeyi kapatıyoruz
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # M4 çipinde RAM'i gereksiz şişirmemesi için 512MB ile sınırladık
+    ports:
+      - "9200:9200"
+    networks:
+      - dvu-network
+
+  # 3. Log İzleme Arayüzü: Kibana
+  dvu-kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    container_name: dvu_kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://dvu-elasticsearch:9200 # ES'e Docker iç ağı üzerinden bağlanır
+    ports:
+      - "5601:5601" # Dokümanda istenen Kibana portu
+    depends_on:
+      - dvu-elasticsearch # Önce Elasticsearch'ün açılmasını garantiler
+    networks:
+      - dvu-network
+
+# Ortak Ağ ve Kalıcı Disk Alanları Tanımlamaları
+networks:
+  dvu-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
