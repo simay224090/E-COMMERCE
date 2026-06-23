@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # 1. Ortak PostgreSQL Veritabanı
+  # 1. Ortak PostgreSQL Veritabanı Motoru
   dvu-postgres:
     image: postgres:16-alpine
     container_name: dvu_postgres_db
@@ -10,7 +8,7 @@ services:
       POSTGRES_PASSWORD: dvu_password
       POSTGRES_DB: dvu_ecommerce
     ports:
-      - "5432:5432" # Bilgisayarından (Postman/DBeaver) erişebilmen için
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -22,8 +20,8 @@ services:
     container_name: dvu_elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false # Test ortamında hız kazanmak için şifrelemeyi kapatıyoruz
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # M4 çipinde RAM'i gereksiz şişirmemesi için 512MB ile sınırladık
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
     networks:
@@ -34,15 +32,109 @@ services:
     image: docker.elastic.co/kibana/kibana:8.11.1
     container_name: dvu_kibana
     environment:
-      - ELASTICSEARCH_HOSTS=http://dvu-elasticsearch:9200 # ES'e Docker iç ağı üzerinden bağlanır
+      - ELASTICSEARCH_HOSTS=http://dvu-elasticsearch:9200
     ports:
-      - "5601:5601" # Dokümanda istenen Kibana portu
+      - "5601:5601"
     depends_on:
-      - dvu-elasticsearch # Önce Elasticsearch'ün açılmasını garantiler
+      - dvu-elasticsearch
     networks:
       - dvu-network
 
-# Ortak Ağ ve Kalıcı Disk Alanları Tanımlamaları
+  # 4. Kimlik Doğrulama Mikroservisi (Identity)
+  dvu-identity-service:
+    image: dvu-identity-service:latest
+    container_name: dvu_identity_service
+    build:
+      context: ./backend
+      dockerfile: IdentityService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=dvu-postgres;Port=5432;Database=IdentityDb;Username=dvu_user;Password=dvu_password;
+    depends_on:
+      - dvu-postgres
+    networks:
+      - dvu-network
+
+  # 5. Ürün Mikroservisi (Product)
+  dvu-product-service:
+    image: dvu-product-service:latest
+    container_name: dvu_product_service
+    build:
+      context: ./backend
+      dockerfile: ProductService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=dvu-postgres;Port=5432;Database=ProductDb;Username=dvu_user;Password=dvu_password;
+    depends_on:
+      - dvu-postgres
+    networks:
+      - dvu-network
+
+  # 6. Sepet Mikroservisi (Basket)
+  dvu-basket-service:
+    image: dvu-basket-service:latest
+    container_name: dvu_basket_service
+    build:
+      context: ./backend
+      dockerfile: BasketService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=dvu-postgres;Port=5432;Database=BasketDb;Username=dvu_user;Password=dvu_password;
+    depends_on:
+      - dvu-postgres
+    networks:
+      - dvu-network
+
+  # 7. Sipariş Mikroservisi (Order)
+  dvu-order-service:
+    image: dvu-order-service:latest
+    container_name: dvu_order_service
+    build:
+      context: ./backend
+      dockerfile: OrderService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=dvu-postgres;Port=5432;Database=OrderDb;Username=dvu_user;Password=dvu_password;
+    depends_on:
+      - dvu-postgres
+    networks:
+      - dvu-network
+
+  # 8. Ödeme Mikroservisi (Payment)
+  dvu-payment-service:
+    image: dvu-payment-service:latest
+    container_name: dvu_payment_service
+    build:
+      context: ./backend
+      dockerfile: PaymentService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=dvu-postgres;Port=5432;Database=PaymentDb;Username=dvu_user;Password=dvu_password;
+    depends_on:
+      - dvu-postgres
+    networks:
+      - dvu-network
+
+  # 9. API Gateway (Tüm Orkestranın Ön Kapısı)
+  dvu-api-gateway:
+    image: dvu-api-gateway:latest
+    container_name: dvu_api_gateway
+    build:
+      context: ./backend
+      dockerfile: ApiGateway/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - dvu-identity-service
+      - dvu-product-service
+      - dvu-basket-service
+      - dvu-order-service
+      - dvu-payment-service
+    networks:
+      - dvu-network
+
 networks:
   dvu-network:
     driver: bridge
