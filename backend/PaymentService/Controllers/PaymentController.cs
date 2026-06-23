@@ -114,5 +114,36 @@ namespace PaymentService.Controllers
                 return BadRequest(new { Message = "Ödeme başarısız.", Result = paymentLog });
             }
         }
+        [HttpGet("bin-check/{binNumber}")]
+public async Task<IActionResult> GetBinDetails(string binNumber)
+{
+    try
+    {
+        var iyzicoRequest = new RetrieveBinNumberRequest
+        {
+            BinNumber = binNumber,
+            Locale = Locale.TR.ToString()
+        };
+
+        // iyzico Sandbox sunucusundan BIN sorguluyoruz
+        BinNumber binNumberResponse = await BinNumber.Retrieve(iyzicoRequest, _iyzipayOptions);
+
+        if (binNumberResponse.Status == "success")
+        {
+            return Ok(new { 
+                Message = "BIN sorgulama başarılı.", 
+                CardType = binNumberResponse.CardType, 
+                Association = binNumberResponse.CardAssociation, 
+                BankName = binNumberResponse.BankName 
+            });
+        }
+
+        return BadRequest(new { Message = "iyzico BIN sorgusu başarısız.", Error = binNumberResponse.ErrorMessage });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { Message = "Sistemsel bir hata oluştu.", Details = ex.Message });
+    }
+}
     }
 }
