@@ -125,6 +125,7 @@ public async Task<IActionResult> GetBinDetails(string binNumber)
             Locale = Locale.TR.ToString()
         };
 
+
         // iyzico Sandbox sunucusundan BIN sorguluyoruz
         BinNumber binNumberResponse = await BinNumber.Retrieve(iyzicoRequest, _iyzipayOptions);
 
