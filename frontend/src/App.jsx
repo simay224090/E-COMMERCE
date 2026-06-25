@@ -1,56 +1,96 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from "./components/navbar"; 
+import { Box } from '@mui/material';
+import Login from './pages/Login'; 
+import Register from './pages/Register';
+import ProductDetail from './pages/ProductDetail';
+import ProductList from './pages/ProductList';
+import AdminLayout from './features/Admin/layout/AdminLayout';
+import Home from './pages/Home';
+import Cart from './pages/Cart'; 
+import Checkout from './pages/Checkout';
+import OrderResult from './pages/OrderResult';
+import OrderHistory from './pages/OrderHistory';
+import { CartProvider } from "@/context/CartContext";
 
-// Geçici Sayfa Bileşenleri (Yarın içlerini dolduracağız)
-const Home = () => <div><h2>Ana Sayfa</h2></div>;
-const Login = () => <div><h2>Giriş Sayfası</h2></div>;
-const Register = () => <div><h2>Kayıt Sayfası</h2></div>;
-const ProductList = () => <div><h2>Ürün Listeleme</h2></div>;
-const ProductDetail = () => <div><h2>Ürün Detay</h2></div>;
-const CategoryProducts = () => <div><h2>Kategoriye Göre Ürünler</h2></div>;
-const Cart = () => <div><h2>Sepet Sayfası</h2></div>;
-const Checkout = () => <div><h2>Ödeme Sayfası</h2></div>;
-const OrderResult = () => <div><h2>Sipariş Sonucu</h2></div>;
-const OrderHistory = () => <div><h2>Sipariş Geçmişi</h2></div>;
+// 💡 EKLENEN ADIM 1: Toastify Kütüphanesi ve Stilleri
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// Admin Sayfaları
-const AdminDashboard = () => <div><h2>Admin Dashboard</h2></div>;
-const AdminProducts = () => <div><h2>Admin Ürün Listesi</h2></div>;
-const AdminProductAdd = () => <div><h2>Ürün Ekleme</h2></div>;
-const AdminProductUpdate = () => <div><h2>Ürün Güncelleme</h2></div>;
-const AdminCategories = () => <div><h2>Kategori Yönetimi</h2></div>;
-const AdminOrders = () => <div><h2>Sipariş Listesi</h2></div>;
-const AdminUsers = () => <div><h2>Kullanıcı Listesi</h2></div>;
-const AdminStock = () => <div><h2>Stok Takip Ekranı</h2></div>;
+// 1. MÜŞTERİ (FRONTEND) ANA LAYOUT'U
+const CustomerLayout = () => (
+  <Box>
+    <Navbar />
+    <Box p={3}>
+      <Outlet /> 
+    </Box>
+  </Box>
+);
+
+// Admin Geçici Sayfaları
+const AdminDashboard = () => <h2>👑 Admin Dashboard</h2>;
+const AdminProducts = () => <h2>📦 Admin Ürün Listesi</h2>;
+const AdminProductAdd = () => <h2>➕ Ürün Ekleme</h2>;
+const AdminProductUpdate = () => <h2>🔄 Ürün Güncelleme</h2>;
+const AdminCategories = () => <h2>🗂️ Kategori Yönetimi</h2>;
+const AdminOrders = () => <h2>📋 Sipariş Listesi</h2>;
+const AdminUsers = () => <h2>👥 Kullanıcı Listesi</h2>;
+const AdminStock = () => <h2>📉 Stok Takip Ekranı</h2>;
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* ===== GENEL KULLANICI ROTALARI ===== */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/products" element={<ProductList />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/category/:id" element={<CategoryProducts />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-result" element={<OrderResult />} />
-        <Route path="/order-history" element={<OrderHistory />} />
+    <CartProvider> 
+      <Router>
+        {/* 💡 EKLENEN ADIM 2: Kapsayıcıyı Router'ın hemen içine koyduk. 
+            Böylece sayfa değişse bile bildirim ekranda kalmaya devam eder. */}
+        <ToastContainer 
+          position="top-right" 
+          autoClose={3000} 
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+          theme="colored"
+        />
 
-        {/* ===== KORUMALI ADMİN ROTALARI ===== */}
-        <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />
-        <Route path="/admin/product/add" element={<ProtectedRoute adminOnly><AdminProductAdd /></ProtectedRoute>} />
-        <Route path="/admin/product/update/:id" element={<ProtectedRoute adminOnly><AdminProductUpdate /></ProtectedRoute>} />
-        <Route path="/admin/categories" element={<ProtectedRoute adminOnly><AdminCategories /></ProtectedRoute>} />
-        <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminOrders /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
-        <Route path="/admin/stock" element={<ProtectedRoute adminOnly><AdminStock /></ProtectedRoute>} />
-      </Routes>
-    </Router>
+        <Routes>
+          
+          {/* ===== MÜŞTERİ ROTALARI (Navbar Sabit) ===== */}
+          <Route element={<CustomerLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/category/:id" element={<ProductList />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-result" element={<OrderResult />} />
+            <Route path="/order-history" element={<OrderHistory />} />
+          </Route> 
+
+          {/* ===== AUTHENTICATION ROTALARI (Navbar Yok) ===== */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* ===== ADMİN ROTALARI ===== */}
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly>
+              <AdminLayout /> 
+            </ProtectedRoute>
+          }>
+            <Route index element={<AdminDashboard />} /> 
+            <Route path="products" element={<AdminProducts />} /> 
+            <Route path="product/add" element={<AdminProductAdd />} />
+            <Route path="product/update/:id" element={<AdminProductUpdate />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="stock" element={<AdminStock />} />
+          </Route>
+
+        </Routes>
+      </Router>
+    </CartProvider>
   );
 }
 

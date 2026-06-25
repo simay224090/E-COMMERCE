@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000', // Docker'da ayağa kalkan API Gateway adresimiz
+  baseURL: 'http://localhost:5000',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Her istekte (request) eğer localStorage'da token varsa otomatik olarak Header'a ekle
+// Request Interceptor: Token ekleme (Aynı, standart)
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -16,20 +16,36 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Yanıt (response) hata dönerse ve hata 401 (Unauthorized) ise kullanıcıyı logine fırlat
+// Response Interceptor: 401 ve 403 yönetimi
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    if (error.response) {
+      const { status } = error.response;
+      // 💡 ÇÖZÜM ADIMI 1: Hatanın hangi endpoint'ten geldiğini yakalıyoruz
+      const requestUrl = error.config?.url;
+
+      // 401: Token geçersiz veya süresi dolmuş
+      if (status === 401) {
+        // 💡 ÇÖZÜM ADIMI 2: Eğer bu hata zaten Login işleminden geliyorsa SAYFAYI YÖNLENDİRME!
+        // Yönlendirme yapmadığımız için hata doğrudan Login.jsx'teki catch bloğuna düşecek.
+        if (requestUrl && !requestUrl.includes('/api/auth/login')) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      }
+
+      // 403: Token geçerli ama Admin yetkisi yok
+      if (status === 403) {
+        console.warn("Bu işlemi yapmaya yetkiniz yok!");
+        window.location.href = '/unauthorized'; 
+      }
     }
+    // 💡 ÇÖZÜM ADIMI 3: Hata ne olursa olsun yoluna devam edip catch'e ulaşmasını sağlıyoruz
     return Promise.reject(error);
   }
 );
