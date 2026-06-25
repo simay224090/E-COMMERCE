@@ -30,7 +30,7 @@ Sistem ayağa kalktıktan sonra ilgili servislere aşağıdaki adreslerden eriş
 * **Payment Service:** Gateway üzerinden (iyzico entegrasyonlu ödeme işlemleri)
 
 ## İzlenebilirlik ve Loglama
-Sistemdeki kritik servisler (Örn: OrderService ve PaymentService) Serilog entegrasyonuna sahiptir.
+Sistemdeki kritik servisler (Örn: Identity,Basket Service ,OrderService ve PaymentService) Serilog entegrasyonuna sahiptir.
 Atılan tüm başarılı/başarısız istekler, iyzico ödeme dönüşleri ve olası sistem hataları (Exceptions) Elasticsearch'e aktarılır.
 
 Kibana paneli (http://localhost:5601) üzerinden "Microservice" bazlı filtreleme yapılarak e-ticaret akışı anlık olarak izlenebilir.
