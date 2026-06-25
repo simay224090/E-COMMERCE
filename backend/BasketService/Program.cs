@@ -1,7 +1,26 @@
 using BasketService.Data;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    // 💡 Hangi servisten geldiğini bilmek için adını yaz
+    .Enrich.WithProperty("Microservice", "BasketService") 
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://dvu-elasticsearch:9200"))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"dvu-basket-logs-{DateTime.UtcNow:yyyy-MM}",
+        NumberOfReplicas = 1,
+        NumberOfShards = 2
+    })
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // 1. PostgreSQL DbContext Kaydı (Daha sonra Docker-compose ayarlarında dvu_basket_db adını vereceğiz)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
