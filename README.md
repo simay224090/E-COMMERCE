@@ -34,8 +34,8 @@ Projenin tamamı tek bir Docker Compose dosyası üzerinden ayağa kalkacak şek
 
 1. Projeyi bilgisayarınıza klonlayın ve ana dizine geçiş yapın:
    ```bash
-   git clone <sizin-repo-linkiniz>
-   cd <proje-klasör-adınız>
+   git clone <https://github.com/simay224090/DVU-E-COMMERCE.git>
+   cd <dvu-ecommerce>
 
    docker compose up -d
 
