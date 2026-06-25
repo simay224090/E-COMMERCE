@@ -29,6 +29,13 @@ Sistem ayağa kalktıktan sonra ilgili servislere aşağıdaki adreslerden eriş
 * **Order Service:** Gateway üzerinden (Sipariş oluşturma ve durum takibi)
 * **Payment Service:** Gateway üzerinden (iyzico entegrasyonlu ödeme işlemleri)
 
+## İzlenebilirlik ve Loglama
+Sistemdeki kritik servisler (Örn: OrderService ve PaymentService) Serilog entegrasyonuna sahiptir.
+Atılan tüm başarılı/başarısız istekler, iyzico ödeme dönüşleri ve olası sistem hataları (Exceptions) Elasticsearch'e aktarılır.
+
+Kibana paneli (http://localhost:5601) üzerinden "Microservice" bazlı filtreleme yapılarak e-ticaret akışı anlık olarak izlenebilir.
+
+
 ## Kurulum ve Çalıştırma
 Projenin tamamı tek bir Docker Compose dosyası üzerinden ayağa kalkacak şekilde tasarlanmıştır.
 
@@ -39,4 +46,6 @@ Projenin tamamı tek bir Docker Compose dosyası üzerinden ayağa kalkacak şek
 
    docker compose up -d
 
-   Geliştirici: Simay Çalışkan | Bilgisayar Mühendisliği
+## Geliştirici
+Simay Çalışkan
+Bilgisayar Mühendisliği
