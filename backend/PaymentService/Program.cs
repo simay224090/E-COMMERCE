@@ -1,7 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Data;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Microservice", "PaymentService") 
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://dvu-elasticsearch:9200"))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"dvu-payment-logs-{DateTime.UtcNow:yyyy-MM}", // Index adı değişti
+        NumberOfReplicas = 1,
+        NumberOfShards = 2
+    })
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // 1. Controller Servislerini Konteynera Ekliyoruz (Çok Önemli!)
 builder.Services.AddControllers();

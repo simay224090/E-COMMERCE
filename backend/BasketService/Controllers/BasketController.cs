@@ -3,6 +3,7 @@ using BasketService.DTOs;
 using BasketService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging; 
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,13 +14,17 @@ namespace BasketService.Controllers
     public class BasketController : ControllerBase
     {
         private readonly BasketDbContext _context;
+        // 💡 YENİ: Logger nesnesini tanımlıyoruz
+        private readonly ILogger<BasketController> _logger; 
 
-        public BasketController(BasketDbContext context)
+        // 💡 YENİ: Constructor üzerinden ILogger'ı enjekte ediyoruz
+        public BasketController(BasketDbContext context, ILogger<BasketController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
-        // Helper Metot: Veritabanı modelini güvenli bir şekilde DTO'ya dönüştürür ve Toplam Tutarı otomatik hesaplar
+        // Helper Metot
         private static CartDto MapToCartDto(Cart cart)
         {
             return new CartDto
@@ -31,7 +36,8 @@ namespace BasketService.Controllers
                     ProductId = i.ProductId,
                     ProductName = i.ProductName,
                     Price = i.Price,
-                    Quantity = i.Quantity
+                    Quantity = i.Quantity,
+                    ImageUrl = i.ImageUrl 
                 }).ToList()
             };
         }
@@ -62,45 +68,66 @@ namespace BasketService.Controllers
         public async Task<ActionResult<CartDto>> AddToBasket([FromHeader(Name = "X-User-Id")] string? userId, [FromBody] CartItemDto itemDto)
         {
             if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("Başarısız işlem: Sepete ürün eklenemedi, kullanıcı kimliği (X-User-Id) eksik.");
                 return BadRequest("Kullanıcı bilgisi (X-User-Id) eksik.");
+            }
 
             if (itemDto == null)
                 return BadRequest("Eklenecek ürün bilgisi bulunamadı.");
 
-            var cart = await _context.Carts
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
-
-            if (cart == null)
+            try
             {
-                cart = new Cart { UserId = userId };
-                _context.Carts.Add(cart);
-                await _context.SaveChangesAsync();
-            }
+                var cart = await _context.Carts
+                    .Include(c => c.Items)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == itemDto.ProductId);
-
-            if (existingItem != null)
-            {
-                // Ürün zaten varsa miktarını artır
-                existingItem.Quantity += itemDto.Quantity;
-            }
-            else
-            {
-                // Yoksa yeni kalem olarak ekle
-                var newItem = new CartItem
+                if (cart == null)
                 {
-                    ProductId = itemDto.ProductId,
-                    ProductName = itemDto.ProductName,
-                    Price = itemDto.Price,
-                    Quantity = itemDto.Quantity,
-                    CartId = cart.Id
-                };
-                _context.CartItems.Add(newItem);
-            }
+                    cart = new Cart { UserId = userId };
+                    _context.Carts.Add(cart);
+                    await _context.SaveChangesAsync();
+                }
 
-            await _context.SaveChangesAsync();
-            return Ok(MapToCartDto(cart));
+                var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == itemDto.ProductId);
+
+                if (existingItem != null)
+                {
+                    // Ürün zaten varsa miktarını artır
+                    existingItem.Quantity += itemDto.Quantity;
+                    
+                    // 🟢 AUDIT LOG: Miktar Artırma
+                    _logger.LogInformation("AuditLog: Kullanıcı sepetteki ürünün miktarını artırdı. UserId: {UserId}, ProductId: {ProductId}, ProductName: {ProductName}, EklenenMiktar: {AddedQuantity}, YeniToplam: {TotalQuantity}", 
+                        userId, itemDto.ProductId, itemDto.ProductName, itemDto.Quantity, existingItem.Quantity);
+                }
+                else
+                {
+                    // Yoksa yeni kalem olarak ekle
+                    var newItem = new CartItem
+                    {
+                        ProductId = itemDto.ProductId,
+                        ProductName = itemDto.ProductName,
+                        Price = itemDto.Price,
+                        Quantity = itemDto.Quantity,
+                        ImageUrl = itemDto.ImageUrl,
+                        CartId = cart.Id
+                    };
+                    _context.CartItems.Add(newItem);
+                    
+                    // 🟢 AUDIT LOG: Yeni Ürün Ekleme
+                    _logger.LogInformation("AuditLog: Kullanıcı sepete yeni ürün ekledi. UserId: {UserId}, ProductId: {ProductId}, ProductName: {ProductName}, Quantity: {Quantity}", 
+                        userId, itemDto.ProductId, itemDto.ProductName, itemDto.Quantity);
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(MapToCartDto(cart));
+            }
+            catch (System.Exception ex)
+            {
+                // 🔴 HATA LOGU
+                _logger.LogError(ex, "AuditLog: Sepete ürün eklenirken veritabanı hatası oluştu. UserId: {UserId}, ProductId: {ProductId}", userId, itemDto.ProductId);
+                return StatusCode(500, "Sunucu tarafında bir hata oluştu.");
+            }
         }
 
         // 3. Sepet Miktarını Doğrudan Güncelleme (PUT)
@@ -113,19 +140,32 @@ namespace BasketService.Controllers
             if (quantity <= 0)
                 return BadRequest("Miktar 1 veya daha büyük olmalıdır.");
 
-            var cart = await _context.Carts
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            try
+            {
+                var cart = await _context.Carts
+                    .Include(c => c.Items)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (cart == null) return NotFound("Sepet bulunamadı.");
+                if (cart == null) return NotFound("Sepet bulunamadı.");
 
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-            if (item == null) return NotFound("Ürün sepette bulunamadı.");
+                var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+                if (item == null) return NotFound("Ürün sepette bulunamadı.");
 
-            item.Quantity = quantity;
-            await _context.SaveChangesAsync();
+                item.Quantity = quantity;
+                await _context.SaveChangesAsync();
 
-            return Ok(MapToCartDto(cart));
+                // 🟢 AUDIT LOG: Miktar Güncelleme
+                _logger.LogInformation("AuditLog: Kullanıcı sepetteki ürün miktarını doğrudan güncelledi. UserId: {UserId}, ProductId: {ProductId}, ProductName: {ProductName}, YeniMiktar: {Quantity}", 
+                    userId, productId, item.ProductName, quantity);
+
+                return Ok(MapToCartDto(cart));
+            }
+            catch (System.Exception ex)
+            {
+                // 🔴 HATA LOGU
+                _logger.LogError(ex, "AuditLog: Sepetteki ürün miktarı güncellenirken hata oluştu. UserId: {UserId}, ProductId: {ProductId}", userId, productId);
+                return StatusCode(500, "Sunucu tarafında bir hata oluştu.");
+            }
         }
 
         // 4. Sepetten Ürün Çıkarma (DELETE)
@@ -133,21 +173,38 @@ namespace BasketService.Controllers
         public async Task<ActionResult<CartDto>> RemoveFromBasket([FromHeader(Name = "X-User-Id")] string? userId, int productId)
         {
             if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("Başarısız işlem: Sepetten ürün çıkarılamadı, kullanıcı kimliği (X-User-Id) eksik. ProductId: {ProductId}", productId);
                 return BadRequest("Kullanıcı bilgisi (X-User-Id) eksik.");
+            }
 
-            var cart = await _context.Carts
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            try
+            {
+                var cart = await _context.Carts
+                    .Include(c => c.Items)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (cart == null) return NotFound("Sepet bulunamadı.");
+                if (cart == null) return NotFound("Sepet bulunamadı.");
 
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-            if (item == null) return NotFound("Ürün sepette bulunamadı.");
+                var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+                if (item == null) return NotFound("Ürün sepette bulunamadı.");
 
-            _context.CartItems.Remove(item);
-            await _context.SaveChangesAsync();
+                var removedProductName = item.ProductName; // Loglamak için ismini önceden alıyoruz
+                _context.CartItems.Remove(item);
+                await _context.SaveChangesAsync();
 
-            return Ok(MapToCartDto(cart));
+                // 🟡 AUDIT LOG: Ürün Çıkarma
+                _logger.LogInformation("AuditLog: Kullanıcı sepetten ürün çıkardı. UserId: {UserId}, ProductId: {ProductId}, ProductName: {ProductName}", 
+                    userId, productId, removedProductName);
+
+                return Ok(MapToCartDto(cart));
+            }
+            catch (System.Exception ex)
+            {
+                // 🔴 HATA LOGU
+                _logger.LogError(ex, "AuditLog: Sepetten ürün çıkarılırken hata oluştu. UserId: {UserId}, ProductId: {ProductId}", userId, productId);
+                return StatusCode(500, "Sunucu tarafında bir hata oluştu.");
+            }
         }
     }
 }

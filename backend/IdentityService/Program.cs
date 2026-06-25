@@ -5,18 +5,47 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. PostgreSQL Veritabanı Bağlantısını Ekliyoruz
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
 
-// 2. ASP.NET Core Identity Altyapısını ve Şifreleme Kurallarını Tanımlıyoruz
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Microservice", "IdentityService")
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://dvu-elasticsearch:9200"))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"dvu-identity-logs-{DateTime.UtcNow:yyyy-MM}",
+        NumberOfReplicas = 1,
+        NumberOfShards = 2
+    })
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// --- CORS POLİTİKASI EKLEME ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+           
+    });
+});
+
+// 1. PostgreSQL Bağlantısı
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+
+// 2. Identity Ayarları
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Mülakat projesinde testleri kolaylaştırmak için şifre kurallarını biraz esnetiyoruz
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
@@ -26,7 +55,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// 3. JWT Kimlik Doğrulama (Authentication) Ayarlarını Yapılandırıyoruz
+// 3. JWT Ayarları
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Secret"]!);
 
@@ -55,7 +84,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Swagger arayüzü geliştirme ortamında açık olsun
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -64,10 +92,35 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Kimlik doğrulama middleware'lerini boru hattına (pipeline) ekliyoruz
-app.UseAuthentication(); // "Sen kimsin?" sorusunu sorar
-app.UseAuthorization();  // "Buraya girmeye yetkin var mı?" sorusunu sorar
+// 1. Önce Rotaları belirle
+app.UseRouting(); 
+
+// 2. HEMEN ARDINDAN CORS'u devreye sok (ÇOK ÖNEMLİ)
+app.UseCors("AllowFrontend"); 
+
+// 3. Sonra Kimlik doğrulama işlemlerini yap
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
+// --- OTOMATİK VERİTABANI VE TABLO OLUŞTURMA KODU ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        // Eğer veritabanı ve tablolar yoksa sıfırdan oluşturur, varsa göçleri uygular
+        context.Database.Migrate(); 
+        Console.WriteLine("--> Identity veritabanı ve tabloları başarıyla doğrulandı/oluşturuldu.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> Veritabanı göçü sırasında hata oluştu: {ex.Message}");
+    }
+}
+// --------------------------------------------------
+
+app.Run();
 app.Run();

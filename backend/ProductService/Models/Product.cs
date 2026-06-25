@@ -22,6 +22,17 @@ namespace ProductService.Models
         [Required]
         public int Stock { get; set; }
 
+        // --- YENİ EKLENEN İLİŞKİLER ---
+        
+        [Required]
+        public int? CategoryId { get; set; }
+        
+        // Entity Framework'ün ilişkiyi kurması için Navigation Property
+        public Category? Category { get; set; } 
+        
+        // Bir ürünün birden fazla resmi olabilir (One-to-Many)
+        public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }
