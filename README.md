@@ -1,4 +1,4 @@
-# DVU E-Commerce Microservices
+# DVU E-Commerce Microservices Project
 
 Bu proje, modern yazılım mimarisi prensiplerine uygun olarak geliştirilmiş, tam kapsamlı (Full-Stack) ve kapsayıcı (Containerized) bir e-ticaret mikroservis uygulamasıdır. Proje, API Gateway arkasında haberleşen bağımsız servislerden oluşmakta olup, uçtan uca Dockerize edilmiştir.
 
