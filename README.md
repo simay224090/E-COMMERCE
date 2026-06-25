@@ -24,8 +24,8 @@ Sistem ayağa kalktıktan sonra ilgili servislere aşağıdaki adreslerden eriş
 * **Kibana:** http://localhost:5601 (Merkezi log izleme ve filtreleme paneli)
 * **Elasticsearch:** localhost:9200 (Log verilerinin tutulduğu arama motoru)
 * **Identity Service:** Gateway üzerinden (Kullanıcı kayıt ve JWT doğrulama)
-* **Product Service:** Gateway üzerinden (Ürün katalog yönetimi)
-* **Basket Service:** Gateway üzerinden (Sepet yönetimi - Redis/Postgres)
+* **Product Service:** Gateway üzerinden (Ürün katalog/katogorize yönetimi)
+* **Basket Service:** Gateway üzerinden (Sepet yönetimi - Postgres)
 * **Order Service:** Gateway üzerinden (Sipariş oluşturma ve durum takibi)
 * **Payment Service:** Gateway üzerinden (iyzico entegrasyonlu ödeme işlemleri)
 
