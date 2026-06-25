@@ -8,7 +8,7 @@ Sistem, kullanıcı kimlik doğrulamasından (Identity) sipariş (Order) ve sana
 ## Kullanılan Teknolojiler ve Mimari Özellikler
 * **Frontend:** React.js, Material UI (MUI), Axios (Backend ile API iletişimi), React Toastify (Kullanıcı bildirimleri / ToastContainer)
 * **Backend:** .NET (Web API)
-* **API Gateway:** YARP / Ocelot (Tüm dış isteklerin tek noktadan yönetimi)
+* **API Gateway:** YARP  (Tüm dış isteklerin tek noktadan yönetimi)
 * **Veritabanı:** PostgreSQL
 * **Veritabanı Yönetimi:** DBeaver
 * **Ödeme Altyapısı:** iyzico Sandbox (Non-3D Secure)
