@@ -46,6 +46,24 @@ Projenin tamamı tek bir Docker Compose dosyası üzerinden ayağa kalkacak şek
 
    docker compose up -d
 
+
+## Proje Ekran Görüntüleri
+Aşağıda uygulamamızın çeşitli arayüzlerinden ekran görüntüleri yer almaktadır:
+
+<div align="center">
+  <img src="screeshots/Giriş.png" width="400" />
+  <img src="screeshots/Kayıt.png" width="400" />
+  <img src="screeshots/Anasayfa.png" width="400" />
+  <img src="screeshots/ÜrünDetay.png" width="400" />
+  <img src="screeshots/Sepetim.png" width="400" />
+  <img src="screeshots/Ödeme.png" width="400" />
+  <img src="screeshots/odemeSonuc.png" width="400" />
+  <img src="screeshots/siparisGecmisi.png" width="400" />
+</div>
+
+---
+**Geliştirici:** Simay Çalışkan | Bilgisayar Mühendisliği
+
 ## Geliştirici
 Simay Çalışkan
 Bilgisayar Mühendisliği
