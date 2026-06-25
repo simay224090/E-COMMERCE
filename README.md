@@ -30,11 +30,15 @@ Sistem ayağa kalktıktan sonra ilgili servislere aşağıdaki adreslerden eriş
 * **Payment Service:** Gateway üzerinden (iyzico entegrasyonlu ödeme işlemleri)
 
 ## İzlenebilirlik ve Loglama
-Sistemdeki kritik servisler (Örn: Identity,Basket Service ,OrderService ve PaymentService) Serilog entegrasyonuna sahiptir.
-Atılan tüm başarılı/başarısız istekler, iyzico ödeme dönüşleri ve olası sistem hataları (Exceptions) Elasticsearch'e aktarılır.
+Sistemdeki kritik servisler (Örn: Identity, Basket Service, Order Service ve Payment Service) Serilog entegrasyonuna sahiptir.
+* Atılan tüm başarılı/başarısız istekler, iyzico ödeme dönüşleri ve olası sistem hataları (Exceptions) Elasticsearch'e aktarılır.
+* Kibana paneli (http://localhost:5601) üzerinden "Microservice" bazlı filtreleme yapılarak e-ticaret akışı anlık olarak izlenebilir.
 
-Kibana paneli (http://localhost:5601) üzerinden "Microservice" bazlı filtreleme yapılarak e-ticaret akışı anlık olarak izlenebilir.
-
+<div align="center">
+  <img src="screeshots/log1.png" width="600" />
+  <img src="screeshots/log2.png" width="600" />
+  <img src="screeshots/log3.png" width="600" />
+</div>
 
 ## Kurulum ve Çalıştırma
 Projenin tamamı tek bir Docker Compose dosyası üzerinden ayağa kalkacak şekilde tasarlanmıştır.
