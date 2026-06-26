@@ -15,7 +15,7 @@ Sistem, kullanıcı kimlik doğrulamasından (Identity) sipariş (Order) ve sana
 * **Merkezi Loglama:** Serilog, Elasticsearch ve Kibana
 * **Konteynerleştirme:** Docker & Docker Compose
 
-## Servisler ve Port Konfigürasyonları
+## Container İsimleri ve Port Konfigürasyonları
 Sistem ayağa kalktıktan sonra ilgili servislere aşağıdaki adreslerden erişebilirsiniz:
 
 * **`dvu_frontend` (Frontend):** http://localhost:3000 (React tabanlı kullanıcı arayüzü)
