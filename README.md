@@ -18,16 +18,16 @@ Sistem, kullanıcı kimlik doğrulamasından (Identity) sipariş (Order) ve sana
 ## Servisler ve Port Konfigürasyonları
 Sistem ayağa kalktıktan sonra ilgili servislere aşağıdaki adreslerden erişebilirsiniz:
 
-* **Frontend:** http://localhost:3000 (React tabanlı kullanıcı arayüzü)
-* **API Gateway:** http://localhost:5000 (Mikroservislere açılan ana kapı)
-* **PostgreSQL:** localhost:5432 (Servislerin veritabanı sunucusu)
-* **Kibana:** http://localhost:5601 (Merkezi log izleme ve filtreleme paneli)
-* **Elasticsearch:** localhost:9200 (Log verilerinin tutulduğu arama motoru)
-* **Identity Service:** Gateway üzerinden (Kullanıcı kayıt ve JWT doğrulama)
-* **Product Service:** Gateway üzerinden (Ürün katalog/katogorize yönetimi)
-* **Basket Service:** Gateway üzerinden (Sepet yönetimi - Postgres)
-* **Order Service:** Gateway üzerinden (Sipariş oluşturma ve durum takibi)
-* **Payment Service:** Gateway üzerinden (iyzico entegrasyonlu ödeme işlemleri)
+* **`dvu_frontend` (Frontend):** http://localhost:3000 (React tabanlı kullanıcı arayüzü)
+* **`dvu_api_gateway` (API Gateway):** http://localhost:5000 (Mikroservislere açılan ana kapı)
+* **`dvu_postgres` (PostgreSQL):** localhost:5432 (Servislerin veritabanı sunucusu)
+* **`dvu_kibana`:** http://localhost:5601 (Merkezi log izleme ve filtreleme paneli)
+* **`dvu_elasticsearch`:** localhost:9200 (Log verilerinin tutulduğu arama motoru)
+* **`dvu_identity_service`:** Gateway üzerinden (Kullanıcı kayıt ve JWT doğrulama)
+* **`dvu_product_service`:** Gateway üzerinden (Ürün katalog/kategorize yönetimi)
+* **`dvu_basket_service`:** Gateway üzerinden (Sepet yönetimi - Postgres)
+* **`dvu_order_service`:** Gateway üzerinden (Sipariş oluşturma ve durum takibi)
+* **`dvu_payment_service`:** Gateway üzerinden (iyzico entegrasyonlu ödeme işlemleri)
 
 ## İzlenebilirlik ve Loglama
 Sistemdeki kritik servisler (Örn: Identity, Basket Service, Order Service ve Payment Service) Serilog entegrasyonuna sahiptir.
