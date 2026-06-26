@@ -7,6 +7,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import CartDrawer from './CartDrawer';
 
+// Yeni logo importu (assets/logo klasöründen çekiyoruz)
+import logoImage from '@/assets/logo/newLogo.png'; // Dosya ismine veya uzantısına (.png vb.) göre güncelleyebilirsin
+
 const Navbar = () => {
   const navigate = useNavigate();
 
@@ -33,15 +36,42 @@ const Navbar = () => {
     <>
       <AppBar position="static" color="primary">
         <Toolbar>
-          {/* Logo / Başlık */}
-          <Typography
-            variant="h6"
+          {/* Sol Kısım: Logo ve Başlık Grubu */}
+
+          <Box
             component={Link}
             to="/"
-            style={{ textDecoration: 'none', color: 'white', fontWeight: 'bold', flexGrow: 1 }}
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',      // ← yan yana sırala
+              alignItems: 'center',      // ← dikeyde ortala
+              gap: 1.5,
+              textDecoration: 'none',
+              color: 'white',
+              flexGrow: 1,
+            }}
           >
-            DVU E-Commerce
-          </Typography>
+            {/* Logo */}
+            <Box
+              component="img"
+              src={logoImage}
+              alt="DVU E-Commerce Logo"
+              sx={{
+                height: 70,
+                width: 'auto',
+                objectFit: 'contain',
+                flexShrink: 0,             // ← logo küçülmesin
+                filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))',
+              }}
+            />
+            {/* Marka Adı */}
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 'bold', lineHeight: 1, whiteSpace: 'nowrap' }}
+            >
+              DVU E-Commerce
+            </Typography>
+          </Box>
 
           <Box display="flex" alignItems="center" gap={2}>
             {/* Ürünler Linki */}
