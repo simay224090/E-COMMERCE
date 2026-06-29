@@ -22,6 +22,36 @@ namespace ProductService.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ProductService.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Elektronik"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Giyim"
+                        });
+                });
+
             modelBuilder.Entity("ProductService.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -29,6 +59,10 @@ namespace ProductService.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CategoryId")
+                        .IsRequired()
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
@@ -51,7 +85,108 @@ namespace ProductService.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryId = 1,
+                            CreatedDate = new DateTime(2026, 6, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gelişmiş kablosuz mouse",
+                            Name = "Logitech MX Master 3S",
+                            Price = 3500.00m,
+                            Stock = 50
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryId = 1,
+                            CreatedDate = new DateTime(2026, 6, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Türkçe Q Klavye",
+                            Name = "Apple Magic Keyboard",
+                            Price = 4200.00m,
+                            Stock = 20
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 2,
+                            CreatedDate = new DateTime(2026, 6, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "%100 organik pamuk rahat kesim tişört.",
+                            Name = "Basic Pamuklu Tişört",
+                            Price = 350.00m,
+                            Stock = 100
+                        });
+                });
+
+            modelBuilder.Entity("ProductService.Models.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ImageUrl = "https://via.placeholder.com/500?text=Mouse",
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ImageUrl = "https://via.placeholder.com/500?text=Klavye",
+                            ProductId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ImageUrl = "https://via.placeholder.com/500?text=Tisort",
+                            ProductId = 3
+                        });
+                });
+
+            modelBuilder.Entity("ProductService.Models.Product", b =>
+                {
+                    b.HasOne("ProductService.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("ProductService.Models.ProductImage", b =>
+                {
+                    b.HasOne("ProductService.Models.Product", null)
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProductService.Models.Product", b =>
+                {
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

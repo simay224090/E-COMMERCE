@@ -39,4 +39,11 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+    // Veritabanı ve tabloların olduğundan emin ol
+    dbContext.Database.EnsureCreated();
+}
+
 app.Run();

@@ -45,4 +45,23 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
+// --- TAKIM LİDERİ İÇİN OTOMATİK KURULUM BLOĞU ---
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
+    
+    // Veritabanı yoksa oluştur, tabloları yarat (Çakışma yapmaz, hata fırlatmaz)
+    dbContext.Database.EnsureCreated();
+    
+    // Eğer ödeme servisinde de başlangıç verisi (örneğin test kredi kartları veya ödeme yöntemleri)
+    // olmasını istiyorsan buraya ekleyebilirsin. İstemiyorsan bu kısmı silebilirsin.
+    /*
+    if (!dbContext.PaymentMethods.Any())
+    {
+        dbContext.PaymentMethods.Add(new PaymentMethod { Name = "Kredi Kartı", IsActive = true });
+        dbContext.SaveChanges();
+    }
+    */
+}
+
 app.Run();

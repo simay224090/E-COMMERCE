@@ -45,4 +45,9 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<BasketDbContext>(); // Servisin DbContext'i neyse
+    dbContext.Database.Migrate(); // Tabloları oluşturur
+}
 app.Run();

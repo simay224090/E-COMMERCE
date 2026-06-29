@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using ProductService.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer; // 1. Bunu ekle
 using Microsoft.IdentityModel.Tokens;               // 2. Bunu ekle
-using System.Text;                                  // 3. Bunu ekle
+using System.Text;
+using ProductService.Models;                                  // 3. Bunu ekle
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,12 +55,41 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ... Migration bloğun burada kalmaya devam edebilir ...
+
+// --- GARANTİLİ SEED DATA YÖNTEMİ ---
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ProductDbContext>();
-    context.Database.Migrate();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
+    
+    // 1. Tabloları oluştur
+    dbContext.Database.Migrate();
+
+    // 2. Eğer ürün tablosu boşsa, manuel olarak ekle
+    if (!dbContext.Products.Any())
+    {
+        // Önce kategori
+        var cat = new Category { Name = "Elektronik" };
+        dbContext.Categories.Add(cat);
+        dbContext.SaveChanges(); // ID oluştu
+
+        // Sonra ürün
+        var prod = new Product 
+        { 
+            Name = "Logitech MX Master 3S", 
+            Price = 3500.00m, 
+            Stock = 50, 
+            Description = "Gelişmiş kablosuz mouse",
+            CategoryId = cat.Id,
+            CreatedDate = DateTime.UtcNow
+        };
+        dbContext.Products.Add(prod);
+        dbContext.SaveChanges(); // Ürün kaydedildi
+        
+        // Sonra resim
+        var img = new ProductImage { ProductId = prod.Id, ImageUrl = "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=600&q=80" };
+        dbContext.ProductImages.Add(img);
+        dbContext.SaveChanges();
+    }
 }
 
 app.Run();

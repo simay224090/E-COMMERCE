@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_test:/var/lib/postgresql/data
     networks:
       - dvu-network
 
@@ -147,6 +147,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:5173"
+    volumes:
+      - ./frontend:/app          # Senin bilgisayarındaki kodları, konteynerdeki /app klasörüne canlı bağlar
+      - /app/node_modules
     depends_on:
       - dvu-api-gateway
     networks:
@@ -158,4 +161,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_data_test:
